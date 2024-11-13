@@ -65,6 +65,8 @@ hillshade<-terra::rast("./2023_elevation/hillshade_z5.tif")
 rainfall<-terra::rast("./rainfall/CHIRPS_MeanAnnualRainfall.tif")
 elevation<-terra::rast("./2023_elevation/elevation_90m.tif")
 disttoriver<-terra::rast("./2022_rivers/DistanceToRiver.tif")
+lastyearburn<-terra::rast("./fires/YearLastBurned.tif")
+burnfreq<-terra::rast("./fires/BurnFreq.tif")
 
 # inspect the data 
 class(protected_areas)
@@ -151,6 +153,8 @@ woodybiom_sa<-terra::crop(woodybiom, saExt)
 rainfall_sa<-terra::crop(rainfall, saExt)
 elevation_sa<-terra::crop(elevation, saExt)
 distancetoriver_sa<-terra::crop(disttoriver, saExt)
+lastyearburn_sa<-terra::crop(lastyearburn, saExt)
+burnfreq_sa<-terra::crop(burnfreq, saExt)
 
 # plot the woody biomass
 woody_map_sa<-ggplot()+
@@ -224,6 +228,40 @@ disttoriver_map_sa<-ggplot()+
   tidyterra::geom_spatvector(data=lakes, fill="lightblue", linewidth=0.5)+
   tidyterra::geom_spatvector(data=studyarea, fill=NA, linewidth=1, col="red")+
   labs(title="Distance to river") + 
+  coord_sf(xlimits,ylimits, expand=F, datum = sf::st_crs(32736))+
+  theme(axis.text=element_blank(),
+        axis.ticks=element_blank())+
+  ggspatial::annotation_scale(location = "bl", width_hint = 0.2)
+
+#make a map of the last year burned NOOOOOOG DOOOOEEEEN
+lastyearburn_map_sa<-ggplot()+
+  tidyterra::geom_spatraster(data=lastyearburn_sa) +  #Add color scale
+  scale_fill_gradientn(colours = plasma ,
+                       limits=c(0,2024),
+                       oob=squish, #everything outside scale become either largest or smallest color
+                       name="year") +
+  tidyterra::geom_spatvector(data=protected_areas, fill=NA, linewidth=0.5)+
+  tidyterra::geom_spatvector(data=rivers, col="blue", linewidth=0.5)+
+  tidyterra::geom_spatvector(data=lakes, fill="lightblue", linewidth=0.5)+
+  tidyterra::geom_spatvector(data=studyarea, fill=NA, linewidth=1, col="red")+
+  labs(title="Last year burned") + 
+  coord_sf(xlimits,ylimits, expand=F, datum = sf::st_crs(32736))+
+  theme(axis.text=element_blank(),
+        axis.ticks=element_blank())+
+  ggspatial::annotation_scale(location = "bl", width_hint = 0.2)
+
+#make a map of the burn frequency
+burnfreq_map_sa<-ggplot()+
+  tidyterra::geom_spatraster(data=burnfreq_sa) +  #Add color scale
+  scale_fill_gradientn(colours = plasma ,
+                       limits=c(0,5),
+                       oob=squish, #everything outside scale become either largest or smallest color
+                       name="year") +
+  tidyterra::geom_spatvector(data=protected_areas, fill=NA, linewidth=0.5)+
+  tidyterra::geom_spatvector(data=rivers, col="blue", linewidth=0.5)+
+  tidyterra::geom_spatvector(data=lakes, fill="lightblue", linewidth=0.5)+
+  tidyterra::geom_spatvector(data=studyarea, fill=NA, linewidth=1, col="red")+
+  labs(title="Burn frequency") + 
   coord_sf(xlimits,ylimits, expand=F, datum = sf::st_crs(32736))+
   theme(axis.text=element_blank(),
         axis.ticks=element_blank())+
