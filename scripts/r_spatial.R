@@ -36,7 +36,6 @@ barplot(rep(1,10), col = RColorBrewer::brewer.pal(10, "BrBG"))
 library(viridis)
 barplot(rep(1,10), col = viridis::viridis(10))
 barplot(rep(1,10), col = viridis::plasma(10))
-barplot(rep(1,10), col = viridis::heat(10))
 viridis::plasma(10)
 library(wesanderson)
 barplot(rep(1,10), col = rev(wesanderson::wes_palette("Zissou1", 10, type = "continuous")))
@@ -234,12 +233,12 @@ disttoriver_map_sa<-ggplot()+
   ggspatial::annotation_scale(location = "bl", width_hint = 0.2)
 
 #make a map of the last year burned NOOOOOOG DOOOOEEEEN
-lastyearburn_map_sa<-ggplot()+
+lastyearburn_map_sa <- ggplot()+
   tidyterra::geom_spatraster(data=lastyearburn_sa) +  #Add color scale
-  scale_fill_gradientn(colours = plasma ,
-                       limits=c(0,2024),
+  scale_fill_gradientn(colours = rev(pal_zissou2),
+                       limits=c(2001,2024),
                        oob=squish, #everything outside scale become either largest or smallest color
-                       name="year") +
+                       name="years") +
   tidyterra::geom_spatvector(data=protected_areas, fill=NA, linewidth=0.5)+
   tidyterra::geom_spatvector(data=rivers, col="blue", linewidth=0.5)+
   tidyterra::geom_spatvector(data=lakes, fill="lightblue", linewidth=0.5)+
@@ -270,7 +269,7 @@ burnfreq_map_sa<-ggplot()+
 
 ### # put all maps together
 # and save it to a high resolution png
-composite_map_sa <- woody_map_sa + rainfall_map_sa + elevation_map_sa + disttoriver_map_sa +plot_layout(ncol=2) 
+composite_map_sa <- woody_map_sa + rainfall_map_sa + elevation_map_sa + disttoriver_map_sa + lastyearburn_map_sa + plot_layout(ncol=3) 
 plot(composite_map_sa)
 ggsave("C:/Users/praam/Documents/github/APCE2024/spatial-r-Gijsbert-Pr/Figure/composite_map_sa.png", composite_map_sa, width=20, height=20, units="cm")
 
