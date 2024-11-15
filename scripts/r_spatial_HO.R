@@ -3,7 +3,7 @@
 
 rm(list = ls())
 # set the working directory where your GIS data are located
-setwd("G:/Shared drives/_Org OlffLab/Teaching/APCE/APCE2024/APCE2024GIS")
+setwd("C:/Users/praam/Documents/Master/APCE/APCE2024GIS")
 
 # restore the libraries of the project 
 renv::restore()
