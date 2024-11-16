@@ -19,30 +19,11 @@ library(scales)      # for oob (out of bounds) scale
 library(ggnewscale) # for using multiple color fill scales in ggplot
 library(patchwork)  # for combining multiple ggplots in one panel plot
 
+
 # explore color palettes
 # also see https://www.datanovia.com/en/blog/top-r-color-palettes-to-know-for-great-data-visualization/
-# Base R palettes
-barplot(rep(1,10), col = grey.colors(10))
-grey.colors(10)
-mycolors<-c("red","white","blue")
-mycolors
-barplot(rep(1,10), col = rev(topo.colors(10))) # rev turns the scale arround
-barplot(rep(1,10), col = rev(terrain.colors(10)))
-# rev means reverse the palette order
-library(RColorBrewer) 
-RColorBrewer::display.brewer.all()
-barplot(rep(1,10), col = RColorBrewer::brewer.pal(10, "Spectral"))
-
-barplot(rep(1,10), col = RColorBrewer::brewer.pal(10, "BrBG"))
-library(viridis)
-barplot(rep(1,10), col = rev(viridis::viridis(10)))
-barplot(rep(1,10), col = viridis::plasma(10))
-viridis::plasma(10)
-library(wesanderson)
-barplot(rep(1,10), col = rev(wesanderson::wes_palette("Zissou1", 10, type = "continuous")))
 pal_zissou1<-rev(wesanderson::wes_palette("Zissou1", 10, type = "continuous"))
 pal_zissou2<-wesanderson::wes_palette("Zissou1", 10, type = "continuous")
-pal_zissou1
 
 # load the vector data for the whole ecosystem
 sf::st_layers("./2022_protected_areas/protected_areas.gpkg")
@@ -63,21 +44,16 @@ studyarea<-terra::vect("./studyarea/studyarea.gpkg",
 
 # load the raster data for the whole ecosystem
 woodybiom<-terra::rast("./2016_WoodyVegetation/TBA_gam_utm36S.tif")
-hillshade<-terra::rast("./2023_elevation/hillshade_z5.tif")
 rainfall<-terra::rast("./rainfall/CHIRPS_MeanAnnualRainfall.tif")
 elevation<-terra::rast("./2023_elevation/elevation_90m.tif")
-disttoriver<-terra::rast("./2022_rivers/DistanceToRiver.tif")
-lastyearburn<-terra::rast("./fires/YearLastBurned.tif")
-burnfreq<-terra::rast("./fires/BurnFreq.tif")
-cec<-terra::rast("./soil/CEC_5_15cm.tif")
-hills<-terra::rast("./landforms/hills.tif")
+dist2river<-terra::rast("./2022_rivers/DistanceToRiver.tif")
+lastyearburn<-terra::rast("./_MyData/fires/YearLastBurned.tif")
+burnfreq<-terra::rast("./_MyData/fires/BurnFreq.tif")
+cec<-terra::rast("./_MyData/soil/CEC_5_15cm.tif")
+hills<-terra::rast("./_MyData/landforms/hills.tif")
+dist2pa<-terra::rast("./_MyData/Protected area/DistanceToPA.tif") #Still put in
+dist2crop<-terra::rast("./_MyData/DistanceToCropland.tif") #Still put in
 
-# inspect the data 
-class(protected_areas)
-class(elevation)
-plot(protected_areas)
-plot(elevation)
-plot(protected_areas,add=T)
 
 # set the limits of the map to show (xmin, xmax, ymin, ymax in utm36 coordinates)
 xlimits<-c(550000,900000)
@@ -123,6 +99,7 @@ rainfall_map<-ggplot()+
   theme(axis.text=element_blank(),
         axis.ticks=element_blank())+
   ggspatial::annotation_scale(location = "bl", width_hint = 0.2)
+rainfall_map
 
 # plot the elevation map
 
@@ -162,18 +139,19 @@ ylimits<-c(9690000,9720000)
 saExt<-terra::ext(studyarea)
 
 # crop the woody biomass to the extent of the studyarea
-
 woodybiom_sa<-terra::crop(woodybiom, saExt)
 rainfall_sa<-terra::crop(rainfall, saExt)
 elevation_sa<-terra::crop(elevation, saExt)
-distancetoriver_sa<-terra::crop(disttoriver, saExt)
+dist2river_sa<-terra::crop(dist2river, saExt)
 lastyearburn_sa<-terra::crop(lastyearburn, saExt)
 burnfreq_sa<-terra::crop(burnfreq, saExt)
 cec_sa<-terra::crop(cec, saExt)
 hills_sa<-terra::crop(hills, saExt)
+dist2pa_sa<-terra::crop(dist2pa, saExt)
+dist2crop_sa<-terra::crop(dist2crop, saExt)
 
 
-# plot the woody biomass
+#01 Plot the woody biomass
 woody_map_sa<-ggplot()+
   tidyterra::geom_spatraster(data=woodybiom_sa) +  #Add color scale
   scale_fill_gradientn(colours = rev(terrain.colors(6)),
@@ -189,10 +167,10 @@ woody_map_sa<-ggplot()+
   theme(axis.text=element_blank(),
         axis.ticks=element_blank())+
   ggspatial::annotation_scale(location = "bl", width_hint = 0.2)
+woody_map_sa
 
-# make maps also for the other layers that you found
+#02 Rainfall
 
-#rainfall
 rainfall_30m <- rast(terra::ext(rainfall), resolution = 30, crs = crs(rainfall))
 # Resample the raster to 30m resolution
 rainfall_30m <- terra::resample(rainfall, rainfall_30m, method = "bilinear")  
@@ -219,7 +197,8 @@ rainfall_map_sa<-ggplot() +
   ggspatial::annotation_scale(location="bl",width_hint=0.2)
 rainfall_map_sa  
 
-#elevation
+
+#03 Elevation
 elevation_map_sa<-ggplot()+
   tidyterra::geom_spatraster(data=elevation_sa) +  #Add color scale
   scale_fill_gradientn(colours = terrain.colors(10),
@@ -235,13 +214,12 @@ elevation_map_sa<-ggplot()+
   theme(axis.text=element_blank(),
         axis.ticks=element_blank())+
   ggspatial::annotation_scale(location = "bl", width_hint = 0.2)
+elevation_map_sa
 
 
-
-
-# make distance to river map
-disttoriver_map_sa<-ggplot()+
-  tidyterra::geom_spatraster(data=distancetoriver_sa) +  #Add color scale
+#04 Distance to river
+dist2river_map_sa<-ggplot()+
+  tidyterra::geom_spatraster(data=dist2river_sa) +  #Add color scale
   scale_fill_gradientn(colours = topo.colors(6),
                        limits=c(0,14012),
                        oob=squish, #everything outside scale become either largest or smallest color
@@ -255,8 +233,10 @@ disttoriver_map_sa<-ggplot()+
   theme(axis.text=element_blank(),
         axis.ticks=element_blank())+
   ggspatial::annotation_scale(location = "bl", width_hint = 0.2)
+dist2river_map_sa
 
-#make a map of the last year burned NOOOOOOG DOOOOEEEEN
+
+#05 Last year burned
 lastyearburn_map_sa <- ggplot()+
   tidyterra::geom_spatraster(data=lastyearburn_sa) +  #Add color scale
   scale_fill_gradientn(colours = rev(pal_zissou2),
@@ -272,8 +252,10 @@ lastyearburn_map_sa <- ggplot()+
   theme(axis.text=element_blank(),
         axis.ticks=element_blank())+
   ggspatial::annotation_scale(location = "bl", width_hint = 0.2)
+lastyearburn_map_sa
 
-#make a map of the burn frequency MAKE IT from 2016
+
+#06 Burn frequency
 hist(burnfreq_sa)
 burnfreq_map_sa<-ggplot() +
   tidyterra::geom_spatraster(data=burnfreq_sa) +
@@ -289,7 +271,7 @@ burnfreq_map_sa<-ggplot() +
                              fill="lightblue",linewidth=0.5) +
   tidyterra::geom_spatvector(data=rivers,
                              col="blue",linewidth=0.5) +
-  labs(title=" years burned") +
+  labs(title="Years burned") +
   coord_sf(xlimits,ylimits,expand=F,
            datum = sf::st_crs(32736)) +
   theme(axis.text = element_blank(),
@@ -298,11 +280,12 @@ burnfreq_map_sa<-ggplot() +
 burnfreq_map_sa
 
 
+#07 Soil CEC (Ask question)
 hist(cec_sa)
 cec_map_sa<-ggplot() +
   tidyterra::geom_spatraster(data=cec_sa) +
   scale_fill_gradientn(colours=pal_zissou1,
-                       limits=c(100,350),
+                       limits=c(120,350),
                        oob=squish,
                        name="Soil\nCEC\n5-15cm") +
   tidyterra::geom_spatvector(data=protected_areas,
@@ -321,7 +304,8 @@ cec_map_sa<-ggplot() +
   ggspatial::annotation_scale(location="bl",width_hint=0.2)
 cec_map_sa
 
-#hills
+
+#08 Hills
 landform_map_sa<-ggplot() +
   tidyterra::geom_spatraster(data=as.factor(hills_sa)) +
   scale_fill_manual(values=c("black","orange"),
@@ -342,8 +326,7 @@ landform_map_sa<-ggplot() +
   ggspatial::annotation_scale(location="bl",width_hint=0.2)
 landform_map_sa
 
-#core protected areas:
-
+#09 Core protected areas
 r<-terra::rast("./2022_protected_areas/CoreProtectedAreas.tif") 
 CoreProtectedAreas_sa <- r |> #  replace NA by 0
   is.na() |>
@@ -369,14 +352,64 @@ CoreProtectedAreas_map_sa<-ggplot() +
   ggspatial::annotation_scale(location="bl",width_hint=0.2)
 CoreProtectedAreas_map_sa
 
-### # put all maps together
-# and save it to a high resolution png
-composite_map_sa <- woody_map_sa + rainfall_map_sa + elevation_map_sa + disttoriver_map_sa + lastyearburn_map_sa + burnfreq_map_sa + cec_map_sa + landform_map_sa + plot_layout(ncol=3) 
-plot(composite_map_sa)
-ggsave("C:/Users/praam/Documents/github/APCE2024/spatial-r-Gijsbert-Pr/Figure/composite_map_sa.png", composite_map_sa, width=20, height=20, units="cm")
 
+#10 Distance to Protected Area
+hist(dist2pa_sa)
+dist2pa_map_sa<-ggplot() +
+  tidyterra::geom_spatraster(data=dist2pa_sa) +
+  scale_fill_gradientn(colours=rev(pal_zissou2),
+                       limits=c(0,60000),
+                       oob=squish,
+                       name="meters") +
+  tidyterra::geom_spatvector(data=protected_areas,
+                             fill=NA,linewidth=0.5) +
+  tidyterra::geom_spatvector(data=studyarea,
+                             fill=NA,linewidth=0.5,col="red") +
+  tidyterra::geom_spatvector(data=lakes,
+                             fill="lightblue",linewidth=0.5) +
+  tidyterra::geom_spatvector(data=rivers,
+                             col="blue",linewidth=0.5) +
+  labs(title="Distance from protected area") +
+  coord_sf(xlimits,ylimits,expand=F,
+           datum = sf::st_crs(32736)) +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location="bl",width_hint=0.2)
+dist2pa_map_sa
+
+
+#11 Distance to cropland
+hist(dist2crop_sa)
+dist2crop_map_sa<-ggplot() +
+  tidyterra::geom_spatraster(data=dist2crop_sa) +
+  scale_fill_gradientn(colours=rev(pal_zissou2),
+                       limits=c(0,15000),
+                       oob=squish,
+                       name="meters") +
+  tidyterra::geom_spatvector(data=protected_areas,
+                             fill=NA,linewidth=0.5) +
+  tidyterra::geom_spatvector(data=studyarea,
+                             fill=NA,linewidth=0.5,col="red") +
+  tidyterra::geom_spatvector(data=lakes,
+                             fill="lightblue",linewidth=0.5) +
+  tidyterra::geom_spatvector(data=rivers,
+                             col="blue",linewidth=0.5) +
+  labs(title="Distance from Cropland") +
+  coord_sf(xlimits,ylimits,expand=F,
+           datum = sf::st_crs(32736)) +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location="bl",width_hint=0.2)
+dist2crop_map_sa
+
+
+
+
+
+
+###RANDOM POINTS
 # create 500 random points in our study area
-set.seed(123)
+set.seed(111)
 rpoints <- terra::spatSample(studyarea, size = 250, 
                              method = "random")
 
@@ -400,22 +433,25 @@ rpoints_map_sa<-ggplot() +
   ggspatial::annotation_scale(location="bl",width_hint=0.2)
 rpoints_map_sa
 
-all_maps_sa<-woody_map_sa +disttoriver_map_sa + elevation_map_sa + 
-  CoreProtectedAreas_map_sa + rainfall_map_sa + 
-  cec_map_sa + burnfreq_map_sa + landform_map_sa +rpoints_map_sa +
-  patchwork::plot_layout(ncol=3)
-all_maps_sa
-ggsave("./figures/all_maps_sa.png", width = 297, height = 210, units = "mm",dpi=300)
+### # put all maps together
+# and save it to a high resolution png
+composite_map_sa <- woody_map_sa + rainfall_map_sa + elevation_map_sa + dist2river_map_sa + lastyearburn_map_sa + burnfreq_map_sa + cec_map_sa + landform_map_sa + CoreProtectedAreas_map_sa + dist2pa_map_sa + dist2crop_map_sa + rpoints_map_sa + plot_layout(ncol=3) 
+plot(composite_map_sa)
+ggsave("C:/Users/praam/Documents/github/APCE2024/spatial-r-Gijsbert-Pr/Figure/composite_map_sa.png", composite_map_sa, width=20, height=20, units="cm")
 
+
+
+
+#############DATA extraction
 # extract your the values of the different raster layers to the points
 woody_points <- terra::extract(woodybiom_sa, rpoints) |> 
   as_tibble() |>
   dplyr::rename(woody=TBA_gam_utm36s)
 woody_points
-distancetoriver_points <- terra::extract(distancetoriver_sa, rpoints) |> 
+dist2river_points <- terra::extract(dist2river_sa, rpoints) |> 
   as_tibble() |>
   dplyr::rename(distancetoriver=distance)
-distancetoriver_points
+dist2river_points
 elevation_points <- terra::extract(elevation, rpoints) |> 
   as_tibble() 
 elevation_points
@@ -435,17 +471,30 @@ landform_points <- terra::extract(hills_sa, rpoints) |>
   as_tibble() |>
   dplyr::rename(hills=remapped)
 landform_points
+dist2crop_points <- terra::extract(dist2crop_sa, rpoints) |> 
+  as_tibble() |>
+  dplyr::rename(distancetocrops=distance)
+dist2crop_points
+dist2pa_points <- terra::extract(dist2pa_sa, rpoints) |> 
+  as_tibble() |>
+  dplyr::rename(distancetopa=distance)
+dist2pa_points
 
 # merge the different variable into a single table
 # use woody biomass as the last variable
-pointdata<-cbind(distancetoriver_points[,2],elevation_points[,2],
+pointdata<-cbind(dist2river_points[,2],elevation_points[,2],
                  rainfall_points[,2], 
                  cec_points[,2],burnfreq_points[,2],
-                 landform_points[,2],woody_points[,2]) |>
+                 landform_points[,2], dist2crop_points[,2], 
+                 dist2pa_points[,2], woody_points[,2]) |>
   as_tibble()
 pointdata
 pointdata<-pointdata[complete.cases(pointdata),]
 
+
+
+
+########Data analysis
 # plot how woody cover is predicted by different variables
 # Create a correlation panel plot
 library(psych)
@@ -458,11 +507,12 @@ psych::pairs.panels(
   lm = TRUE,                # Add linear regression lines
   stars=T
 ) #Is there a correlation between the variables? Follow diagonal to find correlation
+ggsave("C:/Users/praam/Documents/github/APCE2024/spatial-r-Gijsbert-Pr/Figure/correlation_plot.png", width=20, height=20, units="cm")
 
-# make long format
+# Make it long format
 names(pointdata)
 pointdata_long<-pivot_longer(data=pointdata,
-                             cols = distancetoriver:hills, # all except woody
+                             cols = distancetoriver:distancetocrops, # all except woody
                              names_to ="pred_var",
                              values_to = "pred_val")
 pointdata_long
@@ -473,6 +523,7 @@ ggplot(data=pointdata_long, mapping=aes(x=pred_val,y=woody,group=pred_var)) +
   geom_smooth() +
   ylim(0,40) +
   facet_wrap(~pred_var,scales="free") 
+ggsave("C:/Users/praam/Documents/github/APCE2024/spatial-r-Gijsbert-Pr/Figure/panel_plot.png", width=20, height=20, units="cm")
 
 # do a pca
 # Load the vegan package
@@ -501,4 +552,4 @@ title(xlab=xlabel)
 title(ylab=ylabel)
 # add contours for woody cover
 vegan::ordisurf(pca_result, pointdata$woody, add = TRUE, col = "green4")
-
+ggsave("C:/Users/praam/Documents/github/APCE2024/spatial-r-Gijsbert-Pr/Figure/pca_plot.png", width=20, height=20, units="cm")
