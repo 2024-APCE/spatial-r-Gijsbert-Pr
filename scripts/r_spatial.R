@@ -457,13 +457,11 @@ dist2build_map_sa<-ggplot() +
   ggspatial::annotation_scale(location="bl",width_hint=0.2)
 dist2build_map_sa
 
-#14 Slope
-
 
 
 ###RANDOM POINTS
 # create 500 random points in our study area
-set.seed(111)
+set.seed(123)
 rpoints <- terra::spatSample(studyarea, size = 250, 
                              method = "random")
 
@@ -572,7 +570,7 @@ ggsave("C:/Users/praam/Documents/github/APCE2024/spatial-r-Gijsbert-Pr/Figure/co
 # Make it long format
 names(pointdata)
 pointdata_long<-pivot_longer(data=pointdata,
-                             cols = distancetoriver:distancetocrops, # all except woody
+                             cols = distancetoriver:EVI, # all except woody
                              names_to ="pred_var",
                              values_to = "pred_val")
 pointdata_long

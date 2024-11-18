@@ -40,29 +40,28 @@ SEM_data_std
 # note that this does not affect the relations between the variables, only the scales  
 
 # make a pairs panel to inspect linearity of relations and expected normality of residuals
-psych::pairs.panels(Anderson2007 %>% select(RES_LHU,BIOMASS,FIRE_FRQ,NMS,
-                                            ,LF_N),
+psych::pairs.panels(SEM_data %>% select(elevation,rainfall,cec,burnfreq,distancetoriver
+                                            ,woody),
                     stars = T, ellipses = F)
-psych::pairs.panels(Anderson2007std %>% select(RES_LHU,BIOMASS,FIRE_FRQ,NMS,
-                                               ,LF_N),
+psych::pairs.panels(SEM_data_std %>% select(elevation,rainfall,cec,burnfreq,distancetoriver
+                                               ,woody),
                     stars = T, ellipses = F)
 
 # analyse the model (response ~ predictors) with a multiple regression approach 
-multreg_std<-lm(LF_N~RES_LHU+BIOMASS+FIRE_FRQ+NMS, data=Anderson2007std) 
+multreg_std<-lm(woody~elevation+rainfall+cec+burnfreq+distancetoriver, data=SEM_data_std) 
 summary(multreg_std) #Only BIOMASS significant in this flat model (No internal relations studied)
 
 # visualization of the result: 
 # browseURL("https://docs.google.com/presentation/d/1Q7uXC5Wiu0G4Xsp5uszCNHKOnf1IMI9doY-13Wbay4A/edit?usp=sharing")
 
-# Make a lavaan model as hypothesized in the Anderson et al 2007 paper and fit the model 
-Leaf_N_model<-'LF_N~BIOMASS+RES_LHU+FIRE_FRQ+NMS
-              BIOMASS~FIRE_FRQ+RES_LHU
-              NMS~FIRE_FRQ+RES_LHU'
-Leaf_N_model
-Leaf_N_fit<-lavaan::sem(Leaf_N_model, data=Anderson2007std)
+#01 Make a lavaan model as hypothesized in the Anderson et al 2007 paper and fit the model 
+Woody_model1<-'woody~burnfreq+distancetoriver+rainfall+cec
+              rainfall~elevation+cec
+              burnfreq~rainfall+elevation+distancetoriver+cec'
+Woody_fit1<-lavaan::sem(Woody_model1, data=SEM_data_std)
 
 # show the model results
-summary(Leaf_N_fit, standardized=T, fit.measures=T, rsquare=T)
+summary(Woody_fit1, standardized=T, fit.measures=T, rsquare=T)
 
 # goodness of fit (should be >0.9): CFI and TLI
 # badness of fit: ( should be <0.1): RMSEA, SRMR
@@ -70,12 +69,37 @@ summary(Leaf_N_fit, standardized=T, fit.measures=T, rsquare=T)
 # R^2 shows the proportion of variance explained by the model
 
 
-# also explore the models as shown in fig 5b and 5c of the Anderson2007 paper
-# so repeat the model for leaf P content
-Leaf_P_model<-'LF_P~BIOMASS+RES_LHU+FIRE_FRQ+NMS
-              BIOMASS~FIRE_FRQ+RES_LHU
-              NMS~FIRE_FRQ+RES_LHU'
-Leaf_P_model
-Leaf_P_fit<-lavaan::sem(Leaf_P_model, data=Anderson2007std)
-summary(Leaf_P_fit, standardized=T, fit.measures=T, rsquare=T)
+#02 Make a lavaan model as hypothesized in the Anderson et al 2007 paper and fit the model 
+#Hypothesis: Woody cover is mediated by rainfall and fire frequency, while CEC and elevation indirectly influence woody cover via these mediators.
+Woody_model2 <- 'woody~burnfreq+rainfall
+                rainfall~cec+elevation+distancetoriver
+                burnfreq~rainfall+elevation+distancetoriver'
+Woody_fit2<-lavaan::sem(Woody_model2, data=SEM_data_std)
+summary(Woody_fit2, standardized=T, fit.measures=T, rsquare=T)
 
+#03 Make a lavaan model as hypothesized in the Anderson et al 2007 paper and fit the model
+#Hypothesis: Direct effects of elevation and rainfall on woody cover, with indirect effects of distance to rivers and fire frequency.
+Woody_model3 <- 'woody ~ rainfall + elevation + burnfreq
+                burnfreq ~ rainfall + distancetoriver
+                rainfall ~ cec + elevation + distancetoriver'
+Woody_fit3<-lavaan::sem(Woody_model3, data=SEM_data_std)
+summary(Woody_fit3, standardized=T, fit.measures=T, rsquare=T)
+
+#04 Make a lavaan model as hypothesized in the Anderson et al 2007 paper and fit the model
+#Hypothesis: Rainfall and soil fertility (CEC) mediate the effect of elevation and distance to rivers on woody cover.
+Woody_model4 <- 'woody ~ rainfall + burnfreq + cec
+                rainfall ~ elevation + distancetoriver + cec
+                burnfreq ~ rainfall + elevation + distancetoriver'
+Woody_fit4<-lavaan::sem(Woody_model4, data=SEM_data_std)
+summary(Woody_fit4, standardized=T, fit.measures=T, rsquare=T)
+
+#05 Make a lavaan model as hypothesized in the Anderson et al 2007 paper and fit the model
+#Hypothesis: Fire frequency acts as a central mediator, influenced by multiple factors and affecting woody cover directly.
+Woody_model5 <- 'woody ~ burnfreq + rainfall + cec
+                burnfreq ~ rainfall + elevation + distancetoriver + cec
+                rainfall ~ elevation + cec'
+Woody_fit5<-lavaan::sem(Woody_model5, data=SEM_data_std)
+summary(Woody_fit5, standardized=T, fit.measures=T, rsquare=T)
+
+models <- list(Woody_fit1, Woody_fit2, Woody_fit3, Woody_fit4, Woody_fit5)
+sapply(models, AIC)
