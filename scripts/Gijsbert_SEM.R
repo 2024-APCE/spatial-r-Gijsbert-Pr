@@ -86,7 +86,7 @@ Woody_fit3<-lavaan::sem(Woody_model3, data=SEM_data_std)
 summary(Woody_fit3, standardized=T, fit.measures=T, rsquare=T)
 
 #04 Make a lavaan model as hypothesized in the Anderson et al 2007 paper and fit the model
-#Hypothesis: Rainfall and soil fertility (CEC) mediate the effect of elevation and distance to rivers on woody cover.
+#Hypothesis: Rainfall and soil fertility (CEC) mediate the effect of elevation and distance to rivers on woody cover
 Woody_model4 <- 'woody ~ rainfall + burnfreq + cec
                 rainfall ~ elevation + distancetoriver + cec
                 burnfreq ~ rainfall + elevation + distancetoriver'
