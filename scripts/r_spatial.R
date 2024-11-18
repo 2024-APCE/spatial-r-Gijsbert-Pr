@@ -51,9 +51,10 @@ lastyearburn<-terra::rast("./_MyData/fires/YearLastBurned.tif")
 burnfreq<-terra::rast("./_MyData/fires/BurnFreq.tif")
 cec<-terra::rast("./_MyData/soil/CEC_5_15cm.tif")
 hills<-terra::rast("./_MyData/landforms/hills.tif")
-dist2pa<-terra::rast("./_MyData/Protected area/DistanceToPA.tif") #Still put in
-dist2crop<-terra::rast("./_MyData/DistanceToCropland.tif") #Still put in
-
+dist2pa<-terra::rast("./_MyData/Protected area/DistanceToPA.tif") 
+dist2crop<-terra::rast("./_MyData/DistanceToCropland.tif") 
+EVI<-terra::rast("./Vegetation/Mean_EVI_2020_2024.tif")
+dist2build<-terra::rast("./buildings/DistanceToBuilding.tif")
 
 # set the limits of the map to show (xmin, xmax, ymin, ymax in utm36 coordinates)
 xlimits<-c(550000,900000)
@@ -149,6 +150,8 @@ cec_sa<-terra::crop(cec, saExt)
 hills_sa<-terra::crop(hills, saExt)
 dist2pa_sa<-terra::crop(dist2pa, saExt)
 dist2crop_sa<-terra::crop(dist2crop, saExt)
+EVI_sa<-terra::crop(EVI$EVI, saExt)
+dist2build_sa<-terra::crop(dist2build, saExt)
 
 
 #01 Plot the woody biomass
@@ -403,7 +406,58 @@ dist2crop_map_sa<-ggplot() +
 dist2crop_map_sa
 
 
+#12 EVI
 
+#Devide EVI values by 1000
+EVI_sa<-EVI_sa/10000
+hist(EVI_sa)
+EVI_map_sa<-ggplot() +
+  tidyterra::geom_spatraster(data=EVI_sa) +
+  scale_fill_gradientn(colours=rev(pal_zissou2),
+                       limits=c(0,0.5),
+                       oob=squish,
+                       name="EVI") +
+  tidyterra::geom_spatvector(data=protected_areas,
+                             fill=NA,linewidth=0.5) +
+  tidyterra::geom_spatvector(data=studyarea,
+                             fill=NA,linewidth=0.5,col="red") +
+  tidyterra::geom_spatvector(data=lakes,
+                             fill="lightblue",linewidth=0.5) +
+  tidyterra::geom_spatvector(data=rivers,
+                             col="blue",linewidth=0.5) +
+  labs(title="EVI") +
+  coord_sf(xlimits,ylimits,expand=F,
+           datum = sf::st_crs(32736)) +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location="bl",width_hint=0.2)
+EVI_map_sa
+
+#13 Distance to building
+hist(dist2build_sa)
+dist2build_map_sa<-ggplot() +
+  tidyterra::geom_spatraster(data=dist2build_sa) +
+  scale_fill_gradientn(colours=rev(pal_zissou2),
+                       limits=c(0,15000),
+                       oob=squish,
+                       name="meters") +
+  tidyterra::geom_spatvector(data=protected_areas,
+                             fill=NA,linewidth=0.5) +
+  tidyterra::geom_spatvector(data=studyarea,
+                             fill=NA,linewidth=0.5,col="red") +
+  tidyterra::geom_spatvector(data=lakes,
+                             fill="lightblue",linewidth=0.5) +
+  tidyterra::geom_spatvector(data=rivers,
+                             col="blue",linewidth=0.5) +
+  labs(title="Distance from building") +
+  coord_sf(xlimits,ylimits,expand=F,
+           datum = sf::st_crs(32736)) +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location="bl",width_hint=0.2)
+dist2build_map_sa
+
+#14 Slope
 
 
 
@@ -435,7 +489,7 @@ rpoints_map_sa
 
 ### # put all maps together
 # and save it to a high resolution png
-composite_map_sa <- woody_map_sa + rainfall_map_sa + elevation_map_sa + dist2river_map_sa + lastyearburn_map_sa + burnfreq_map_sa + cec_map_sa + landform_map_sa + CoreProtectedAreas_map_sa + dist2pa_map_sa + dist2crop_map_sa + rpoints_map_sa + plot_layout(ncol=3) 
+composite_map_sa <- woody_map_sa + rainfall_map_sa + elevation_map_sa + dist2river_map_sa + lastyearburn_map_sa + burnfreq_map_sa + cec_map_sa + landform_map_sa + CoreProtectedAreas_map_sa + dist2pa_map_sa + dist2crop_map_sa + dist2build_map_sa + EVI_map_sa + rpoints_map_sa + plot_layout(ncol=3) 
 plot(composite_map_sa)
 ggsave("C:/Users/praam/Documents/github/APCE2024/spatial-r-Gijsbert-Pr/Figure/composite_map_sa.png", composite_map_sa, width=20, height=20, units="cm")
 
@@ -479,6 +533,11 @@ dist2pa_points <- terra::extract(dist2pa_sa, rpoints) |>
   as_tibble() |>
   dplyr::rename(distancetopa=distance)
 dist2pa_points
+dist2build_points<- terra::extract(dist2build_sa, rpoints) |> 
+  as_tibble() |>
+  dplyr::rename(distancetobuild=distance)
+EVI_points <- terra::extract(EVI_sa, rpoints) |> 
+  as_tibble()
 
 # merge the different variable into a single table
 # use woody biomass as the last variable
@@ -486,13 +545,14 @@ pointdata<-cbind(dist2river_points[,2],elevation_points[,2],
                  rainfall_points[,2], 
                  cec_points[,2],burnfreq_points[,2],
                  landform_points[,2], dist2crop_points[,2], 
-                 dist2pa_points[,2], woody_points[,2]) |>
+                 dist2pa_points[,2], dist2build_points[,2], EVI_points[,2], woody_points[,2]) |>
   as_tibble()
 pointdata
 pointdata<-pointdata[complete.cases(pointdata),]
 
-
-
+#made a csv file
+getwd()
+readr::write_csv(pointdata, "pointdata.csv")
 
 ########Data analysis
 # plot how woody cover is predicted by different variables
@@ -551,5 +611,5 @@ ylabel <- paste("PC2 (", round(pca_result$CA$eig[2] / sum(pca_result$CA$eig) * 1
 title(xlab=xlabel)
 title(ylab=ylabel)
 # add contours for woody cover
-vegan::ordisurf(pca_result, pointdata$woody, add = TRUE, col = "green4")
-ggsave("C:/Users/praam/Documents/github/APCE2024/spatial-r-Gijsbert-Pr/Figure/pca_plot.png", width=20, height=20, units="cm")
+plot_PCA<-vegan::ordisurf(pca_result, pointdata$woody, add = TRUE, col = "green4")
+ggsave("C:/Users/praam/Documents/github/APCE2024/spatial-r-Gijsbert-Pr/Figure/plot_PCA.png", width=20, height=20, units="cm")

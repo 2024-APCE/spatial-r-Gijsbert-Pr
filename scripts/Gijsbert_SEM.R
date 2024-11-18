@@ -1,8 +1,8 @@
 #### STRUCTURAL EQUATION MODELLING USING LAVAAN
 
-# analysis of Anderson 2007 dataset
+# analysis of woody cover
 # Paper:
-# browseURL("https://drive.google.com/file/d/1aasI7uIFj7zcjuu0A3QhPDU4X-oQtcnx/view?usp=sharing")
+# browseURL("https://docs.google.com/spreadsheets/d/1C4Et19BZJB4kQEtOSHaiSxYB-SjHYz4QAJH7BwOgztE/edit?gid=0#gid=0")
 
 # restore libraries
 
@@ -28,16 +28,15 @@ library(lavaan)
 # LF_NA - plant leaf sodium content
 
 # dataset:
-#browseURL("https://docs.google.com/spreadsheets/d/1wk3UTAN7Cp7ZeoB0wpfW2C2eE_VoyKnJQpJ0Zrjk3yM/edit?usp=sharing")
+#browseURL("https://docs.google.com/spreadsheets/d/1C4Et19BZJB4kQEtOSHaiSxYB-SjHYz4QAJH7BwOgztE/edit?gid=0#gid=0")
 # read the data from the google docs link:
-Anderson2007<-read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQJ21uqYHZE0lUgVEou0Yp0HK_Hmjtokrmga8yx5mkV6rwWTNJUaFT9RABZtZqWUIhEArHGL7eIJY4O/pub?gid=1916700193&single=true&output=csv") %>%
-  mutate(SOIL_RN=SOIL_NO3+SOIL_NH4)  # total soil reactive nitrogen
-names(Anderson2007)
+SEM_data<-read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vS7xJtSN92rte6HHjzPxf9n3I_cVI4cshpItca4czd0iOHcuPJXil842MZ0xMHnS5Y5u9RpftaJZPlk/pub?gid=1502613483&single=true&output=csv")   # total soil reactive nitrogen
+names(SEM_data)
 # standardize all variables to mean 0 and standard deviation 1
-Anderson2007std <- Anderson2007 |>
+SEM_data_std <- SEM_data |>
   mutate_all(~(scale(.) %>% as.vector)) |> #Change unit axis but not the relationship between variables
   as_tibble()
-Anderson2007std
+SEM_data_std
 # note that this does not affect the relations between the variables, only the scales  
 
 # make a pairs panel to inspect linearity of relations and expected normality of residuals
@@ -45,7 +44,7 @@ psych::pairs.panels(Anderson2007 %>% select(RES_LHU,BIOMASS,FIRE_FRQ,NMS,
                                             ,LF_N),
                     stars = T, ellipses = F)
 psych::pairs.panels(Anderson2007std %>% select(RES_LHU,BIOMASS,FIRE_FRQ,NMS,
-                                           ,LF_N),
+                                               ,LF_N),
                     stars = T, ellipses = F)
 
 # analyse the model (response ~ predictors) with a multiple regression approach 
@@ -79,5 +78,4 @@ Leaf_P_model<-'LF_P~BIOMASS+RES_LHU+FIRE_FRQ+NMS
 Leaf_P_model
 Leaf_P_fit<-lavaan::sem(Leaf_P_model, data=Anderson2007std)
 summary(Leaf_P_fit, standardized=T, fit.measures=T, rsquare=T)
-
 
