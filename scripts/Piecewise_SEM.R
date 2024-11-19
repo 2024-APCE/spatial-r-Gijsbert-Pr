@@ -1,6 +1,7 @@
 # Piecewise SEM
 
 library(piecewiseSEM)
+library(minqa)
 
 # read the pointdata
 pointdata_init<-read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSgbmMwgqYtc_Vac7djGpaQucleD4ZsqyiDMDFHrboEbxqJi4W1LvyJDclFl-WlPxcu7x3HQ8guG2NF/pub?gid=0&single=true&output=csv")
