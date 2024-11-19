@@ -56,7 +56,7 @@ summary(multreg_std) #Only BIOMASS significant in this flat model (No internal r
 
 #01 Make a lavaan model as hypothesized in the Anderson et al 2007 paper and fit the model 
 Woody_model1<-'woody~burnfreq+distancetoriver+rainfall+cec
-              rainfall~elevation+cec
+              rainfall~elevation
               burnfreq~rainfall+elevation+distancetoriver+cec'
 Woody_fit1<-lavaan::sem(Woody_model1, data=SEM_data_std)
 
@@ -97,9 +97,10 @@ summary(Woody_fit4, standardized=T, fit.measures=T, rsquare=T)
 #Hypothesis: Fire frequency acts as a central mediator, influenced by multiple factors and affecting woody cover directly.
 Woody_model5 <- 'woody ~ burnfreq + rainfall + cec
                 burnfreq ~ rainfall + elevation + distancetoriver + cec
-                rainfall ~ elevation + cec'
+                rainfall ~ elevation + cec '
 Woody_fit5<-lavaan::sem(Woody_model5, data=SEM_data_std)
 summary(Woody_fit5, standardized=T, fit.measures=T, rsquare=T)
 
 models <- list(Woody_fit1, Woody_fit2, Woody_fit3, Woody_fit4, Woody_fit5)
 sapply(models, AIC)
+
