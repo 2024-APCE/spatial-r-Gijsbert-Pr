@@ -89,7 +89,7 @@ Woody_model4 <- 'woody~burnfreq+rainfall+cec+slope
               rainfall~elevation
               burnfreq~rainfall
               cec~rainfall+burnfreq+slope
-              elevation~slope'
+              elevation~~slope'
 Woody_fit4<-lavaan::sem(Woody_model4, data=SEM_data_std)
 summary(Woody_fit4, standardized=T, fit.measures=T, rsquare=T)
 
@@ -98,7 +98,7 @@ Woody_model5 <- 'woody~burnfreq+rainfall+cec
               rainfall~elevation+slope
               burnfreq~rainfall+elevation
               cec~rainfall+burnfreq
-              elevation~slope'
+              elevation~~slope'
 Woody_fit5<-lavaan::sem(Woody_model5, data=SEM_data_std)
 summary(Woody_fit5, standardized=T, fit.measures=T, rsquare=T)
 
@@ -107,7 +107,7 @@ Woody_model6 <- 'woody~burnfreq+cec+rainfall
               rainfall~elevation+slope
               burnfreq~elevation+rainfall
               cec~rainfall
-              slope~elevation'
+              slope~~elevation'
 Woody_fit6<-lavaan::sem(Woody_model6, data=SEM_data_std)
 summary(Woody_fit6, standardized=T, fit.measures=T, rsquare=T)
 #test all models for AIC
