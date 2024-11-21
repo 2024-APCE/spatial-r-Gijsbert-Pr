@@ -78,22 +78,13 @@ Woody_model3 <- 'woody~distancetoriver+cec
 Woody_fit3<-lavaan::sem(Woody_model3, data=SEM_data_std)
 summary(Woody_fit3, standardized=T, fit.measures=T, rsquare=T)
 
-#04 Make a lavaan model as hypothesized in the Anderson et al 2007 paper and fit the model
-Woody_model4 <- 'woody~burnfreq+rainfall+cec+slope
-              rainfall~elevation
-              burnfreq~rainfall
-              cec~rainfall+burnfreq+slope
-              elevation~~slope'
-Woody_fit4<-lavaan::sem(Woody_model4, data=SEM_data_std)
-summary(Woody_fit4, standardized=T, fit.measures=T, rsquare=T)
+
 
 #05 Make a lavaan model as hypothesized in the Anderson et al 2007 paper and fit the model`
-Woody_model5 <- 'woody~rainfall+cec+slope+distancetoriver
+Woody_model5 <- 'woody~rainfall+cec+slope
               rainfall~elevation+slope
               cec~rainfall
               elevation~~slope'
 Woody_fit5<-lavaan::sem(Woody_model5, data=SEM_data_std)
 summary(Woody_fit5, standardized=T, fit.measures=T, rsquare=T)
 
-
-AIC(Woody_fit1,Woody_fit2,Woody_fit3,Woody_fit4,Woody_fit5,Woody_fit6)
