@@ -31,8 +31,7 @@ library(lavaan)
 #browseURL("https://docs.google.com/spreadsheets/d/1C4Et19BZJB4kQEtOSHaiSxYB-SjHYz4QAJH7BwOgztE/edit?gid=0#gid=0")
 # read the data from the google docs link:
 SEM_data<-read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vS7xJtSN92rte6HHjzPxf9n3I_cVI4cshpItca4czd0iOHcuPJXil842MZ0xMHnS5Y5u9RpftaJZPlk/pub?gid=1244944669&single=true&output=csv")|>
-  na.omit() |>   # keep complete cases
-  dplyr:: filter(woody>0, woody<30)   # total soil reactive nitrogen
+  na.omit() 
 names(SEM_data)
 # standardize all variables to mean 0 and standard deviation 1
 SEM_data_std <- SEM_data |>
@@ -61,7 +60,7 @@ Woody_model1<-'woody~burnfreq+distancetoriver+rainfall+cec
               rainfall~elevation
               burnfreq~rainfall+distancetoriver
               cec~rainfall+burnfreq+distancetoriver
-              distancetoriver~elevation'
+              distancetoriver~~elevation'
 Woody_fit1<-lavaan::sem(Woody_model1, data=SEM_data_std)
 
 # show the model results
@@ -72,17 +71,12 @@ summary(Woody_fit1, standardized=T, fit.measures=T, rsquare=T)
 # Regressions show relations (numbers and significance)
 # R^2 shows the proportion of variance explained by the model
 
-
-#02 Make a lavaan model as hypothesized in the Anderson et al 2007 paper and fit the model 
-#Hypothesis: Woody cover is mediated by rainfall and fire frequency, while CEC and elevation indirectly influence woody cover via these mediators.
-Woody_model2 <- 'woody~distancetoriver+burnfreq+cec
+Woody_model3 <- 'woody~distancetoriver+cec
               rainfall~elevation
-              burnfreq~rainfall
               cec~rainfall+distancetoriver
-              distancetoriver~elevation'
-Woody_fit2<-lavaan::sem(Woody_model2, data=SEM_data_std)
-summary(Woody_fit2, standardized=T, fit.measures=T, rsquare=T)
-
+              distancetoriver~~elevation'
+Woody_fit3<-lavaan::sem(Woody_model3, data=SEM_data_std)
+summary(Woody_fit3, standardized=T, fit.measures=T, rsquare=T)
 
 #04 Make a lavaan model as hypothesized in the Anderson et al 2007 paper and fit the model
 Woody_model4 <- 'woody~burnfreq+rainfall+cec+slope
@@ -94,21 +88,12 @@ Woody_fit4<-lavaan::sem(Woody_model4, data=SEM_data_std)
 summary(Woody_fit4, standardized=T, fit.measures=T, rsquare=T)
 
 #05 Make a lavaan model as hypothesized in the Anderson et al 2007 paper and fit the model`
-Woody_model5 <- 'woody~burnfreq+rainfall+cec
+Woody_model5 <- 'woody~rainfall+cec+slope+distancetoriver
               rainfall~elevation+slope
-              burnfreq~rainfall+elevation
-              cec~rainfall+burnfreq
+              cec~rainfall
               elevation~~slope'
 Woody_fit5<-lavaan::sem(Woody_model5, data=SEM_data_std)
 summary(Woody_fit5, standardized=T, fit.measures=T, rsquare=T)
 
 
-Woody_model6 <- 'woody~burnfreq+cec+rainfall
-              rainfall~elevation+slope
-              burnfreq~elevation+rainfall
-              cec~rainfall
-              slope~~elevation'
-Woody_fit6<-lavaan::sem(Woody_model6, data=SEM_data_std)
-summary(Woody_fit6, standardized=T, fit.measures=T, rsquare=T)
-#test all models for AIC
 AIC(Woody_fit1,Woody_fit2,Woody_fit3,Woody_fit4,Woody_fit5,Woody_fit6)

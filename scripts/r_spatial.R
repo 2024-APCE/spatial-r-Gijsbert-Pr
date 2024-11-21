@@ -581,13 +581,25 @@ pointdata<-cbind(dist2river_points[,2],elevation_points[,2],
                  dist2pa_points[,2], dist2build_points[,2], EVI_points[,2], slope_points[,2], woody_points[,2]) |>
   as_tibble()
 pointdata
+
+#Check wheter the outlier in woody is really an outlier
+woody_values <- woody_points$woody  # Extract the woody column
+
+# Calculate standard deviation
+std_dev <- sd(woody_values, na.rm = TRUE)  # na.rm ensures NAs are ignored
+mean<-mean(woody_values, na.rm = TRUE)
+print(std_dev)
+print(mean)
+
 filtered_pointdata <- pointdata |>
-  filter(cec != 0)  # Replace `V4` with the actual column name if named differently
+  filter(cec != 0)|>
+  filter(woody < 40)
+  
 pointdata<-filtered_pointdata[complete.cases(filtered_pointdata),]
 
 #made a csv file
 getwd()
-readr::write_csv(pointdata, "pointdata.csv")
+#readr::write_csv(pointdata, "pointdata.csv")
 
 ########Data analysis
 # plot how woody cover is predicted by different variables
